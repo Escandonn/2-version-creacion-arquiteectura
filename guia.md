@@ -4,6 +4,27 @@
 
 # OBJETIVO
 
+IMPORTANTE:
+
+El sistema debe ser:
+
+* asíncrono
+* no bloquear la UI
+* compatible con múltiples navegadores simultáneos
+* estable con PyQt5
+* abrir perfiles en paralelo
+* evitar congelamiento de interfaz
+* evitar cierre completo si un navegador falla
+* arquitectura preparada para threads y escalabilidad
+
+La UI nunca debe bloquearse mientras SeleniumBase ejecuta perfiles.
+
+Cada navegador debe ejecutarse en procesos o threads independientes.
+
+---
+
+# ARQUITECTURA ASÍNCRONA
+
 Sistema para:
 
 * Gestionar múltiples perfiles
@@ -432,6 +453,177 @@ Contendrá:
 
 ---
 
+# SISTEMA ASÍNCRONO
+
+## PROBLEMA
+
+Si SeleniumBase abre perfiles directamente desde PyQt5:
+
+```python
+abrir_chrome()
+```
+
+la interfaz se congela.
+
+---
+
+## SOLUCIÓN
+
+Usar:
+
+* QThread
+* threading
+* workers
+* señales PyQt5
+
+Cada perfil debe abrirse en un thread independiente.
+
+---
+
+# FLUJO ASÍNCRONO
+
+```text
+UI PyQt5
+   │
+   ▼
+Thread Manager
+   │
+   ├── Thread Chrome Profile_1
+   ├── Thread Chrome Profile_2
+   ├── Thread Firefox Profile_1
+   └── Thread Firefox Profile_2
+```
+
+---
+
+# THREAD MANAGER
+
+## gestores/thread_manager.py
+
+```python
+from threading import Thread
+from gestores.selenium_manager import (
+    abrir_chrome,
+    abrir_firefox
+)
+
+
+class NavegadorThread(Thread):
+
+    def __init__(
+        self,
+        navegador,
+        perfil
+    ):
+
+        super().__init__()
+
+        self.navegador = navegador
+        self.perfil = perfil
+
+
+    def run(self):
+
+        try:
+
+            if self.navegador == "chrome":
+                abrir_chrome(self.perfil)
+
+            elif self.navegador == "firefox":
+                abrir_firefox(self.perfil)
+
+        except Exception as e:
+            print(e)
+```
+
+---
+
+# ABRIR PERFILES SIN BLOQUEAR UI
+
+```python
+from gestores.thread_manager import NavegadorThread
+
+
+threads = []
+
+for navegador, perfiles in activos.items():
+
+    for perfil in perfiles:
+
+        hilo = NavegadorThread(
+            navegador,
+            perfil
+        )
+
+        hilo.start()
+
+        threads.append(hilo)
+```
+
+---
+
+# REGLAS IMPORTANTES
+
+## 1
+
+Nunca ejecutar Selenium directamente en UI.
+
+---
+
+## 2
+
+Cada navegador debe ejecutarse separado.
+
+---
+
+## 3
+
+Si un navegador falla:
+
+* la UI sigue funcionando
+* los demás perfiles siguen abiertos
+
+---
+
+## 4
+
+No bloquear:
+
+```python
+app.exec_()
+```
+
+---
+
+## 5
+
+Preparado para:
+
+* 10 perfiles
+* 50 perfiles
+* 100 perfiles
+
+---
+
+# ARQUITECTURA FINAL ASÍNCRONA
+
+```text
+PyQt5 UI
+   │
+   ▼
+Thread Manager
+   │
+   ▼
+SeleniumBase Workers
+   │
+   ├── Chrome Worker
+   ├── Firefox Worker
+   ├── Edge Worker
+   └── Opera Worker
+```
+
+---
+
 # VENTAJAS
 
 * modular
@@ -833,17 +1025,3 @@ feat: arquitectura multi perfil SeleniumBase + PyQt5
 - selección perfiles activos
 - arquitectura modular escalable
 ````
-Ya quedó agregado el código completo del sistema:
-
-* `main.py`
-* gestor de carpetas
-* Selenium manager
-* menú PyQt5
-* frontend base
-* modelo perfil
-* `.gitignore`
-* instalación
-* drivers
-* ejecución
-
-con la misma arquitectura que diseñaste.

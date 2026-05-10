@@ -1,38 +1,122 @@
-def seleccionar_perfiles(datos):
+from PyQt5.QtWidgets import (
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QLabel,
+    QCheckBox,
+    QApplication
+)
 
-    activos = {}
+from gestores.thread_manager import NavegadorThread
 
-    print("\n=========== NAVEGADORES ===========")
 
-    for navegador, perfiles in datos.items():
+class MenuPerfiles(QWidget):
 
-        print(f"\n{navegador.upper()}")
-        print(f"Cantidad perfiles: {len(perfiles)}")
+    def __init__(self, datos):
 
-        for i, perfil in enumerate(perfiles):
+        super().__init__()
 
-            print(f"{i} -> {perfil}")
+        self.datos = datos
 
-        seleccion = input(
-            "\nSelecciona perfiles separados por coma: "
-        )
+        self.activos = {}
 
-        indices = seleccion.split(",")
+        self.threads = []
 
-        activos[navegador] = []
+        self.setWindowTitle("Multi Perfil SeleniumBase")
 
-        for indice in indices:
+        self.resize(500, 600)
 
-            indice = indice.strip()
+        self.layout = QVBoxLayout()
 
-            if indice.isdigit():
+        self.checkboxes = {}
 
-                indice = int(indice)
+        self.crear_ui()
 
-                if indice < len(perfiles):
+        self.setLayout(self.layout)
 
-                    activos[navegador].append(
-                        perfiles[indice]
+
+    def crear_ui(self):
+
+        titulo = QLabel("Navegadores Detectados")
+
+        self.layout.addWidget(titulo)
+
+        for navegador, perfiles in self.datos.items():
+
+            texto = QLabel(
+                f"{navegador} -> {len(perfiles)} perfiles"
+            )
+
+            self.layout.addWidget(texto)
+
+            self.checkboxes[navegador] = []
+
+            for perfil in perfiles:
+
+                check = QCheckBox(perfil)
+
+                self.layout.addWidget(check)
+
+                self.checkboxes[navegador].append(check)
+
+        self.boton = QPushButton("Abrir Seleccionados")
+
+        self.boton.clicked.connect(self.obtener_activos)
+
+        self.layout.addWidget(self.boton)
+
+        self.status = QLabel("")
+        self.layout.addWidget(self.status)
+
+
+    def obtener_activos(self):
+
+        for navegador, checks in self.checkboxes.items():
+
+            self.activos[navegador] = []
+
+            for check in checks:
+
+                if check.isChecked():
+                    self.activos[navegador].append(
+                        check.text()
                     )
 
-    return activos
+        if any(self.activos.values()):
+            self.status.setText("Abriendo perfiles en threads...")
+            self.boton.setEnabled(False)
+            self.abrir_en_threads()
+            self.status.setText("Perfiles abiertos. Ventana activa.")
+        else:
+            self.status.setText("Selecciona al menos un perfil antes de abrir.")
+
+
+    def abrir_en_threads(self):
+
+        for navegador, perfiles in self.activos.items():
+
+            for perfil in perfiles:
+
+                print(f"Abriendo en thread -> {navegador} -> {perfil}")
+
+                hilo = NavegadorThread(
+                    navegador,
+                    perfil
+                )
+
+                hilo.start()
+
+                self.threads.append(hilo)
+
+
+def seleccionar_perfiles(datos):
+
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+
+    ventana = MenuPerfiles(datos)
+
+    ventana.show()
+
+    app.exec_()

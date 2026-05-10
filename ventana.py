@@ -5,8 +5,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout
 )
 
-from tabla.dibujotabla import DibujoTabla
-
 
 class VentanaPrincipal(QWidget):
 
@@ -17,8 +15,6 @@ class VentanaPrincipal(QWidget):
         self.setGeometry(100, 100, 1000, 1000)
 
         self.layout = QVBoxLayout()
-
-        self.tabla = DibujoTabla()
 
         self.layout.addWidget(self.tabla)
 

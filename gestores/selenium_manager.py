@@ -41,18 +41,21 @@ def abrir_firefox(perfil):
 
 def abrir_perfiles(activos):
 
+    from gestores.thread_manager import NavegadorThread
+
+    threads = []
+
     for navegador, perfiles in activos.items():
 
         for perfil in perfiles:
 
-            print(
-                f"Abrir -> {navegador} -> {perfil}"
+            print(f"Abriendo en thread -> {navegador} -> {perfil}")
+
+            hilo = NavegadorThread(
+                navegador,
+                perfil
             )
 
-            if navegador == "chrome":
+            hilo.start()
 
-                abrir_chrome(perfil)
-
-            elif navegador == "firefox":
-
-                abrir_firefox(perfil)
+            threads.append(hilo)

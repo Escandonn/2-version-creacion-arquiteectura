@@ -1,0 +1,37 @@
+# Perfiles navegadores
+perfiles/
+
+# Chrome
+**/Default/
+**/Profile*
+**/Guest Profile/
+
+# Firefox
+**/*.sqlite
+**/*.sqlite-shm
+**/*.sqlite-wal
+
+# Caché
+**/Cache/
+**/Code Cache/
+**/GPUCache/
+
+# Cookies / sesiones
+**/Cookies
+**/Cookies-journal
+**/Network/
+
+# Local storage
+**/Local Storage/
+**/Session Storage/
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc
+
+# Virtual env
+venv/
+.env

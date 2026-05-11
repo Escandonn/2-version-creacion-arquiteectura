@@ -31,10 +31,10 @@ carpeta_gestor.py
 obtener_navegadores()
    │
    ▼
-menu.py (PyQt5)
+front/ventana.py (UI Hermosa)
    │
    ▼
-seleccionar_perfiles()
+front/logica.py (QThread)
    │
    ▼
 thread_manager.py
@@ -48,6 +48,8 @@ thread_manager.py
 selenium_manager.py
    │
    ▼
+SeleniumBase (Paralelo)
+```
 SeleniumBase (Paralelo)
 ```
 
@@ -78,11 +80,12 @@ proyecto/
 │
 ├── opciones/
 │   ├── __init__.py
-│   ├── menu.py
+│   ├── menu.py (legacy)
 │
 ├── front/
 │   ├── __init__.py
-│   ├── ventana.py
+│   ├── ventana.py (UI Hermosa)
+│   ├── logica.py (QThread Logic)
 │
 ├── modelos/
 │   ├── __init__.py
@@ -163,18 +166,47 @@ Responsabilidades:
 
 ---
 
-## menu.py
+## menu.py (LEGACY)
 
-Controla la interfaz PyQt5.
+Versión anterior de la UI.
 
 Responsabilidades:
 
-* mostrar perfiles detectados
-* checkboxes para seleccionar perfiles
-* botón "Abrir Seleccionados"
-* crear threads para cada perfil
-* mostrar estado de ejecución
-* **mantener ventana abierta**
+* mantenido por compatibilidad
+* interfaz básica con PyQt5
+* sin QThread (bloquea UI)
+
+---
+
+## front/ventana.py (UI HERMOSA)
+
+Interfaz gráfica hermosa.
+
+Responsabilidades:
+
+* diseño moderno con gradientes y colores
+* QGroupBox para navegadores
+* QCheckBox con íconos para perfiles
+* QScrollArea para muchos perfiles
+* QProgressBar indeterminada
+* QTextEdit para logs en tiempo real
+* botones: Abrir, Seleccionar Todo, Deseleccionar Todo
+* señales PyQt5 para comunicación asíncrona
+* **mantener ventana abierta y responsiva**
+
+---
+
+## front/logica.py (QTHREAD)
+
+Lógica asíncrona con QThread.
+
+Responsabilidades:
+
+* heredar de QThread
+* emitir señales `progreso_signal` y `terminado_signal`
+* crear NavegadorThread para cada perfil
+* manejar progreso sin bloquear UI
+* comunicación thread-safe con UI
 
 ---
 
@@ -243,25 +275,29 @@ python main.py
 
 ---
 
-## PASO 4: Mostrar Interfaz PyQt5
+## PASO 4: Mostrar UI Hermosa
 
-`menu.py` crea ventana:
+`front/ventana.py` crea ventana hermosa:
 
 ```text
-┌────────────────────────────────┐
-│ Navegadores Detectados         │
-├────────────────────────────────┤
-│ chrome -> 2 perfiles           │
-│ ☐ Profile 1                    │
-│ ☐ Profile 2                    │
-├────────────────────────────────┤
-│ firefox -> 1 perfil            │
-│ ☐ profile_1                    │
-├────────────────────────────────┤
-│ [Abrir Seleccionados]          │
-├────────────────────────────────┤
-│ Estado: Esperando selección... │
-└────────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│ 🎯 Sistema Multi-Perfil SeleniumBase          │
+├─────────────────────────────────────────────────┤
+│ 🌐 CHROME (2 perfiles)                         │
+│ ☐ 📁 Profile 1                                │
+│ ☐ 📁 Profile 2                                │
+├─────────────────────────────────────────────────┤
+│ 🌐 FIREFOX (1 perfil)                          │
+│ ☐ 📁 profile_1                                │
+├─────────────────────────────────────────────────┤
+│ [🚀 Abrir Seleccionados] [✅ Seleccionar Todo] │
+│ [❌ Deseleccionar Todo]                        │
+├─────────────────────────────────────────────────┤
+│ 🔄 Estado: Esperando selección...             │
+├─────────────────────────────────────────────────┤
+│ Log de ejecución:                              │
+│ Iniciando apertura de perfiles...              │
+└─────────────────────────────────────────────────┘
 ```
 
 ---
@@ -291,39 +327,54 @@ Se ejecuta `obtener_activos()`:
 
 ---
 
-## PASO 7: Crear Threads (NO BLOQUEA UI)
+## PASO 7: Crear QThread (NO BLOQUEA UI)
 
-`abrir_en_threads()` crea threads:
+`LogicaPerfiles` (QThread) inicia:
 
 ```python
-for navegador, perfiles in activos.items():
-    for perfil in perfiles:
-        hilo = NavegadorThread(navegador, perfil)
-        hilo.start()
-        threads.append(hilo)
+self.logica = LogicaPerfiles(self.activos)
+self.logica.progreso_signal.connect(self.actualizar_progreso)
+self.logica.terminado_signal.connect(self.terminado)
+self.logica.start()
 ```
 
 ---
 
-## PASO 8: Threads Abren Navegadores
+## PASO 8: QThread Crea NavegadorThreads
 
-Cada `NavegadorThread`:
+Dentro de `LogicaPerfiles.run()`:
 
-* corre en paralelo
-* ejecuta `abrir_chrome()` o `abrir_firefox()`
-* carga perfil con `user-data-dir`
-* abre URL de prueba
-* **NO bloquea la UI**
+```python
+for navegador, perfiles in self.activos.items():
+    for perfil in perfiles:
+        self.progreso_signal.emit(f"Abriendo {navegador} -> {perfil}")
+
+        hilo = NavegadorThread(navegador, perfil)
+        hilo.start()
+        self.threads.append(hilo)
+```
 
 ---
 
-## PASO 9: UI Permanece Activa
+## PASO 9: Señales Actualizan UI
 
-Ventana PyQt5:
+Señales PyQt5 actualizan la UI en tiempo real:
+
+```python
+def actualizar_progreso(self, mensaje):
+    self.status.setText(f"🔄 {mensaje}")
+    self.log_area.append(mensaje)
+```
+
+---
+
+## PASO 10: UI Permanece Activa
+
+Ventana hermosa:
 
 * sigue respondiendo
 * permite seleccionar más perfiles
-* muestra estado en tiempo real
+* muestra progreso en tiempo real
 * no se congela
 
 ---
@@ -361,43 +412,50 @@ Resultado: UI responsiva.
 # ARQUITECTURA ASÍNCRONA
 
 ```text
-┌─────────────────────────────────────────┐
-│          PyQt5 UI (Main Thread)         │
-├─────────────────────────────────────────┤
-│                                         │
-│  ☑ Profile 1  ☑ Profile 2             │
-│  [Abrir Seleccionados]                 │
-│  "Perfiles abiertos. Ventana activa."  │
-│                                         │
-└────────────┬────────────────────────────┘
+┌─────────────────────────────────────────────────┐
+│              PyQt5 UI Hermosa                   │
+│  (Main Thread - Responsive)                     │
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  ☑ Profile 1  ☑ Profile 2                     │
+│  [🚀 Abrir] [✅ Todo] [❌ Nada]                │
+│  🔄 Abriendo chrome -> Profile 1              │
+│  Log: Iniciando... Abriendo... Terminado.     │
+│                                                 │
+└────────────┬────────────────────────────────────┘
              │
              ├─────────────────────────────────────┐
              │                                     │
              ▼                                     ▼
     
     ┌──────────────────────┐       ┌──────────────────────┐
-    │ NavegadorThread      │       │ NavegadorThread      │
-    │ chrome/Profile 1     │       │ firefox/profile_1    │
+    │ LogicaPerfiles       │       │ NavegadorThread      │
+    │ (QThread)            │       │ (Thread)             │
+    │ progreso_signal.emit │       │ SeleniumBase Chrome  │
+    │ terminado_signal.emit│       │ user-data-dir=...    │
+    │                      │       │ open(google.com)     │
     │                      │       │                      │
-    │ SeleniumBase Chrome  │       │ SeleniumBase Firefox │
-    │ user-data-dir=...    │       │ user-data-dir=...    │
-    │ open(google.com)     │       │ open(google.com)     │
     └──────────────────────┘       └──────────────────────┘
     
-    (Ejecuta en paralelo sin bloquear UI)
+    (Ejecuta en paralelo sin bloquear UI hermosa)
 ```
 
 ---
 
 # VENTAJAS DEL SISTEMA
 
-* **UI No se congela** mientras SeleniumBase corre
+* **UI Hermosa y Responsive** - gradientes, íconos, scroll
+* **No se congela** mientras SeleniumBase corre
 * **Múltiples perfiles simultáneos** en paralelo
 * **Escalable** a 10, 50, 100 perfiles
 * **Modular** - fácil agregar navegadores
 * **Robusto** - si un perfil falla, otros continúan
 * **Flexible** - abrir nuevos perfiles sin reiniciar
+* **QThread + Signals** - comunicación thread-safe
+* **Log en tiempo real**
+* **Botones adicionales** (Seleccionar Todo, Deseleccionar)
 * **Preparado** para bots, automatización masiva
+* **QThread + Señales PyQt5** - comunicación thread-safe
 
 ---
 
@@ -409,7 +467,7 @@ Resultado: UI responsiva.
 
 ```python
 from gestores.carpeta_gestor import obtener_navegadores
-from opciones.menu import seleccionar_perfiles
+from front.ventana import seleccionar_perfiles
 
 
 def main():
@@ -717,7 +775,7 @@ class MenuPerfiles(QWidget):
                 self.threads.append(hilo)
 
 
-def seleccionar_perfiles(datos):
+def sel eccionar_perfiles(datos):
 
     app = QApplication.instance()
     if app is None:
@@ -747,6 +805,260 @@ class Ventana(QWidget):
         self.setWindowTitle("Sistema Multi Perfil")
 
         self.resize(1000, 700)
+```
+
+---
+
+## front/logica.py
+
+```python
+from PyQt5.QtCore import QThread, pyqtSignal
+from gestores.thread_manager import NavegadorThread
+
+
+class LogicaPerfiles(QThread):
+
+    progreso_signal = pyqtSignal(str)
+    terminado_signal = pyqtSignal(str)
+
+    def __init__(self, activos):
+        super().__init__()
+        self.activos = activos
+        self.threads = []
+
+    def run(self):
+        self.progreso_signal.emit("Iniciando apertura de perfiles...")
+
+        for navegador, perfiles in self.activos.items():
+            for perfil in perfiles:
+                self.progreso_signal.emit(f"Abriendo {navegador} -> {perfil}")
+
+                hilo = NavegadorThread(navegador, perfil)
+                hilo.start()
+                self.threads.append(hilo)
+
+        self.progreso_signal.emit("Todos los perfiles iniciados en threads")
+        self.terminado_signal.emit("Perfiles abiertos exitosamente. UI activa.")
+```
+
+---
+
+## front/ventana.py
+
+```python
+from PyQt5.QtWidgets import (
+    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
+    QCheckBox, QGroupBox, QScrollArea, QFrame, QApplication,
+    QProgressBar, QTextEdit
+)
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFont, QPalette, QColor
+from front.logica import LogicaPerfiles
+
+
+class VentanaHermosa(QWidget):
+
+    def __init__(self, datos):
+        super().__init__()
+        self.datos = datos
+        self.activos = {}
+        self.logica = None
+        self.init_ui()
+
+    def init_ui(self):
+        self.setWindowTitle("🚀 Multi-Perfil SeleniumBase Pro")
+        self.setGeometry(100, 100, 1200, 800)
+        self.setStyleSheet("""
+            QWidget {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
+                    stop:0 #2c3e50, stop:1 #34495e);
+                color: white;
+                font-family: 'Segoe UI', Arial;
+            }
+            QGroupBox {
+                font-size: 14px;
+                font-weight: bold;
+                border: 2px solid #3498db;
+                border-radius: 5px;
+                margin-top: 1ex;
+                background: rgba(52, 73, 94, 0.8);
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 5px 0 5px;
+                color: #ecf0f1;
+            }
+            QCheckBox {
+                font-size: 12px;
+                padding: 5px;
+            }
+            QCheckBox::indicator {
+                width: 15px;
+                height: 15px;
+            }
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #3498db, stop:1 #2980b9);
+                border: none;
+                border-radius: 5px;
+                padding: 10px 20px;
+                font-size: 14px;
+                font-weight: bold;
+                color: white;
+                min-width: 150px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #5dade2, stop:1 #3498db);
+            }
+            QPushButton:pressed {
+                background: #21618c;
+            }
+            QPushButton:disabled {
+                background: #7f8c8d;
+            }
+            QLabel {
+                font-size: 12px;
+            }
+            QProgressBar {
+                border: 2px solid #3498db;
+                border-radius: 5px;
+                text-align: center;
+            }
+            QProgressBar::chunk {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #27ae60, stop:1 #2ecc71);
+            }
+            QTextEdit {
+                background: rgba(44, 62, 80, 0.9);
+                border: 1px solid #3498db;
+                border-radius: 5px;
+                color: #ecf0f1;
+                font-family: 'Consolas', monospace;
+            }
+        """)
+
+        layout_principal = QVBoxLayout()
+
+        # Header
+        header = QLabel("🎯 Sistema Multi-Perfil SeleniumBase")
+        header.setFont(QFont("Arial", 18, QFont.Bold))
+        header.setAlignment(Qt.AlignCenter)
+        header.setStyleSheet("color: #ecf0f1; margin: 20px;")
+        layout_principal.addWidget(header)
+
+        # Scroll area for profiles
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+
+        widget_contenido = QWidget()
+        layout_contenido = QVBoxLayout()
+
+        self.checkboxes = {}
+        for navegador, perfiles in self.datos.items():
+            grupo = QGroupBox(f"🌐 {navegador.upper()} ({len(perfiles)} perfiles)")
+            layout_grupo = QVBoxLayout()
+
+            self.checkboxes[navegador] = []
+            for perfil in perfiles:
+                check = QCheckBox(f"📁 {perfil}")
+                layout_grupo.addWidget(check)
+                self.checkboxes[navegador].append(check)
+
+            grupo.setLayout(layout_grupo)
+            layout_contenido.addWidget(grupo)
+
+        widget_contenido.setLayout(layout_contenido)
+        scroll.setWidget(widget_contenido)
+        layout_principal.addWidget(scroll)
+
+        # Buttons
+        layout_botones = QHBoxLayout()
+
+        self.btn_abrir = QPushButton("🚀 Abrir Seleccionados")
+        self.btn_abrir.clicked.connect(self.abrir_perfiles)
+        layout_botones.addWidget(self.btn_abrir)
+
+        self.btn_seleccionar_todo = QPushButton("✅ Seleccionar Todo")
+        self.btn_seleccionar_todo.clicked.connect(self.seleccionar_todo)
+        layout_botones.addWidget(self.btn_seleccionar_todo)
+
+        self.btn_deseleccionar = QPushButton("❌ Deseleccionar Todo")
+        self.btn_deseleccionar.clicked.connect(self.deseleccionar_todo)
+        layout_botones.addWidget(self.btn_deseleccionar)
+
+        layout_principal.addLayout(layout_botones)
+
+        # Progress and status
+        self.progress = QProgressBar()
+        self.progress.setVisible(False)
+        layout_principal.addWidget(self.progress)
+
+        self.status = QLabel("Estado: Esperando selección...")
+        self.status.setStyleSheet("color: #f39c12; font-weight: bold;")
+        layout_principal.addWidget(self.status)
+
+        # Log area
+        self.log_area = QTextEdit()
+        self.log_area.setMaximumHeight(150)
+        self.log_area.setPlainText("Log de ejecución:\n")
+        layout_principal.addWidget(self.log_area)
+
+        self.setLayout(layout_principal)
+
+    def seleccionar_todo(self):
+        for checks in self.checkboxes.values():
+            for check in checks:
+                check.setChecked(True)
+
+    def deseleccionar_todo(self):
+        for checks in self.checkboxes.values():
+            for check in checks:
+                check.setChecked(False)
+
+    def abrir_perfiles(self):
+        self.activos = {}
+        for navegador, checks in self.checkboxes.items():
+            self.activos[navegador] = [check.text().replace("📁 ", "") for check in checks if check.isChecked()]
+
+        if any(self.activos.values()):
+            self.btn_abrir.setEnabled(False)
+            self.progress.setVisible(True)
+            self.progress.setRange(0, 0)  # Indeterminate
+
+            self.log_area.append("Iniciando apertura de perfiles...")
+
+            self.logica = LogicaPerfiles(self.activos)
+            self.logica.progreso_signal.connect(self.actualizar_progreso)
+            self.logica.terminado_signal.connect(self.terminado)
+            self.logica.start()
+        else:
+            self.status.setText("❌ Selecciona al menos un perfil")
+            self.log_area.append("Error: No se seleccionaron perfiles")
+
+    def actualizar_progreso(self, mensaje):
+        self.status.setText(f"🔄 {mensaje}")
+        self.log_area.append(mensaje)
+
+    def terminado(self, mensaje):
+        self.status.setText(f"✅ {mensaje}")
+        self.progress.setVisible(False)
+        self.btn_abrir.setEnabled(True)
+        self.log_area.append(mensaje)
+
+
+def seleccionar_perfiles(datos):
+    app = QApplication.instance()
+    if app is None:
+        app = QApplication([])
+
+    ventana = VentanaHermosa(datos)
+    ventana.show()
+
+    app.exec_()
 ```
 
 ---
@@ -814,13 +1126,16 @@ python main.py
 
 ✅ Arquitectura modular  
 ✅ Detección automática de perfiles  
-✅ Interfaz PyQt5 completa  
-✅ Sistema asíncrono con threads  
+✅ **UI Hermosa y Responsive** (gradientes, íconos, scroll)  
+✅ Sistema asíncrono con QThread + Thread  
 ✅ UI no bloqueada  
 ✅ Múltiples perfiles en paralelo  
 ✅ Manejo de errores en threads  
 ✅ Escalable a cientos de perfiles  
 ✅ Compatible con Chrome y Firefox  
+✅ **Señales PyQt5 para comunicación thread-safe**  
+✅ **Log en tiempo real**  
+✅ **Botones adicionales** (Seleccionar Todo, Deseleccionar)  
 ✅ Preparado para bots y automatización  
 
 ---
@@ -828,9 +1143,18 @@ python main.py
 # PROXIMAS MEJORAS
 
 * Agregar Signal/Slot para actualizaciones en tiempo real
-* Progreso bar de ejecución
+* Progreso bar con porcentaje real
 * Guardar configuración de perfiles
 * Agregar más navegadores (Edge, Opera)
+* Sistema de logging completo a archivo
+* Monitor de recursos (CPU, memoria)
+* Pausar/Reanudar perfiles
+* Kill automático de procesos zombie
+* Tema oscuro/claro
+* Animaciones de carga
+* Notificaciones del sistema
+* Exportar logs
+* Configuración avanzada
 * Sistema de logging completo
 * Monitor de recursos (CPU, memoria)
 * Pausar/Reanudar perfiles

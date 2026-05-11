@@ -1,5 +1,5 @@
 from gestores.carpeta_gestor import obtener_navegadores
-from opciones.menu import seleccionar_perfiles
+from front.ventana import seleccionar_perfiles
 
 
 def main():

@@ -1,9 +1,15 @@
-# Perfiles navegadores
+# =========================
+# PERFILES NAVEGADORES
+# =========================
+
+perfil/
 perfiles/
+profile/
+profiles/
 
 # Chrome
 **/Default/
-**/Profile*
+**/Profile*/
 **/Guest Profile/
 
 # Firefox
@@ -11,27 +17,70 @@ perfiles/
 **/*.sqlite-shm
 **/*.sqlite-wal
 
-# Caché
+# =========================
+# CACHE
+# =========================
+
 **/Cache/
 **/Code Cache/
 **/GPUCache/
+**/Service Worker/
+**/ShaderCache/
 
-# Cookies / sesiones
+# =========================
+# COOKIES / SESIONES
+# =========================
+
 **/Cookies
 **/Cookies-journal
 **/Network/
-
-# Local storage
-**/Local Storage/
+**/Sessions/
 **/Session Storage/
 
-# Logs
+# =========================
+# LOCAL STORAGE
+# =========================
+
+**/Local Storage/
+**/IndexedDB/
+
+# =========================
+# LOGS
+# =========================
+
 *.log
 
-# Python
+# =========================
+# PYTHON
+# =========================
+
 __pycache__/
 *.pyc
+*.pyo
 
-# Virtual env
+# =========================
+# VENV
+# =========================
+
 venv/
+.env/
 .env
+
+# =========================
+# SELENIUMBASE
+# =========================
+
+downloaded_files/
+latest_logs/
+visual_baseline/
+
+# =========================
+# CHROME TEMP FILES
+# =========================
+
+DevToolsActivePort
+First Run
+Last Browser
+Last Version
+Local State
+Variations

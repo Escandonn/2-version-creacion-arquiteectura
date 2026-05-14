@@ -33,7 +33,7 @@ class WhatsappBot:
 
             for e in elementos:
                 texto = e.text.strip()
-                print("TEXTO:", texto)
+                
 
                 if texto == "Grupos":
                     # SCROLL

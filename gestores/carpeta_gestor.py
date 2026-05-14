@@ -5,9 +5,15 @@ RUTA_PERFILES = "perfiles"
 
 NAVS = [
     "chrome",
-    "firefox"
+    "firefox",
+    "edge"
 ]
 
+# perfiles y navegador
+
+PERFILES = {
+    
+}
 
 
 def crear_estructura():

@@ -39,6 +39,24 @@ def abrir_firefox(perfil):
         sb.sleep(999)
 
 
+def abrir_edge(perfil):
+
+    ruta = os.path.join(
+        "perfiles",
+        "edge",
+        perfil
+    )
+
+    with SB(
+        browser="edge",
+        user_data_dir=ruta
+    ) as sb:
+
+        sb.open("https://google.com")
+
+        sb.sleep(999)
+
+
 def abrir_perfiles(activos):
 
     from gestores.thread_manager import NavegadorThread

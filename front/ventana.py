@@ -248,8 +248,9 @@ class VentanaHermosa(QWidget):
         clear_layout.addWidget(self.clear_button)
         left_layout.addLayout(clear_layout)
 
-        left_panel.setMinimumWidth(420)
-        body_layout.addWidget(left_panel, 1)
+        left_panel.setMinimumWidth(380)
+        left_panel.setMaximumWidth(450)
+        body_layout.addWidget(left_panel)
 
         right_panel = QVBoxLayout()
         right_panel.setSpacing(16)
@@ -294,7 +295,7 @@ class VentanaHermosa(QWidget):
         chart_layout.addWidget(self.crear_chart_placeholder())
 
         analytics_layout.addWidget(chart_panel, 3)
-        right_panel.addWidget(analytics_card, 2)
+        right_panel.addWidget(analytics_card)
 
         detail_row = QHBoxLayout()
         detail_row.setSpacing(16)
@@ -336,7 +337,7 @@ class VentanaHermosa(QWidget):
 
         right_panel.addWidget(log_card, 1)
 
-        body_layout.addLayout(right_panel, 2)
+        body_layout.addLayout(right_panel, 1)
         main_layout.addLayout(body_layout)
 
     def crear_tarjeta(self, titulo, valor, color):
@@ -378,7 +379,7 @@ class VentanaHermosa(QWidget):
 
     def crear_chart_placeholder(self):
         placeholder = QFrame()
-        placeholder.setFixedHeight(190)
+        placeholder.setMinimumHeight(150)
         placeholder.setStyleSheet(
             "background: qlineargradient(x1:0, y1:0, x2:1, y2:1, "
             "stop:0 #e0f2fe, stop:1 #ffffff); border: 1px solid #cbd5e1; border-radius: 18px;"

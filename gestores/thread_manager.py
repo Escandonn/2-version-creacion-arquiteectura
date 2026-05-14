@@ -1,7 +1,8 @@
 from threading import Thread
 from gestores.selenium_manager import (
     abrir_chrome,
-    abrir_firefox
+    abrir_firefox,
+    abrir_edge
 )
 
 
@@ -29,6 +30,9 @@ class NavegadorThread(Thread):
 
             elif self.navegador == "firefox":
                 abrir_firefox(self.perfil)
+
+            elif self.navegador == "edge":
+                abrir_edge(self.perfil)
 
         except Exception as e:
             print(f"Error al abrir {self.navegador} {self.perfil}: {e}")

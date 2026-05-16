@@ -57,6 +57,34 @@ def probar_clicks():
                 if resp == 's':
                     print(f"\n¡ÉXITO! La estrategia ganadora es: {estrategia['nombre']}")
                     print("Anota el número de la estrategia para actualizar el código principal.")
+                    
+                    print("\n--- PRUEBA DE ESCRITURA EN CAJA DE TEXTO ---")
+                    mensaje_prueba = "Hola, prueba de escritura exitosa."
+                    
+                    # Selectores basados en el HTML proporcionado (especial atención al aria-label de grupo)
+                    selectores_caja = [
+                        f'//div[@aria-label="Escribir un mensaje para el grupo {nombre}"]',
+                        '//div[@data-testid="conversation-compose-box-input"]',
+                        '//div[@role="textbox" and @contenteditable="true" and contains(@aria-label, "Escribir un mensaje")]'
+                    ]
+                    
+                    escrito = False
+                    for selector in selectores_caja:
+                        print(f"Probando selector para caja de texto: {selector}")
+                        try:
+                            if sb.is_element_visible(selector):
+                                sb.type(selector, mensaje_prueba)
+                                print(f"-> ¡Texto escrito correctamente usando este selector!")
+                                escrito = True
+                                break
+                        except Exception as e:
+                            print(f"-> Falló o no visible con este selector: {e}")
+                    
+                    if not escrito:
+                        print("-> No se pudo escribir con ninguno de los selectores probados. Puede que el chat no haya cargado por completo.")
+                    else:
+                        print("-> Revisa en WhatsApp que el texto se haya escrito correctamente en la caja del mensaje.")
+                        
                     input("Presiona ENTER para cerrar el navegador y salir...")
                     return
                 elif resp == 'salir':

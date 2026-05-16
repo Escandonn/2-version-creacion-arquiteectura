@@ -85,7 +85,35 @@ def probar_clicks():
                     else:
                         print("-> Revisa en WhatsApp que el texto se haya escrito correctamente en la caja del mensaje.")
                         
-                    input("Presiona ENTER para cerrar el navegador y salir...")
+                        resp_btn = input("\n¿Quieres probar hacer clic en el botón de ENVIAR? (s/n): ").lower()
+                        if resp_btn == 's':
+                            print("\n--- PRUEBA DE BOTÓN DE ENVIAR ---")
+                            # Selectores basados en el HTML proporcionado para el botón Enviar
+                            selectores_enviar = [
+                                '//button[@aria-label="Enviar"]',
+                                '//button[@data-tab="11" and @aria-label="Enviar"]',
+                                '//span[@data-icon="wds-ic-send-filled"]',
+                                '//span[@data-testid="wds-ic-send-filled"]'
+                            ]
+                            
+                            enviado = False
+                            for sel_env in selectores_enviar:
+                                print(f"Probando selector para botón enviar: {sel_env}")
+                                try:
+                                    if sb.is_element_visible(sel_env):
+                                        sb.click(sel_env)
+                                        print(f"-> ¡Clic en botón Enviar exitoso usando este selector!")
+                                        enviado = True
+                                        break
+                                except Exception as e:
+                                    print(f"-> Falló con este selector: {e}")
+                                    
+                            if not enviado:
+                                print("-> No se pudo hacer clic en el botón de Enviar con ningún selector.")
+                            else:
+                                print("-> Verifica en WhatsApp si el mensaje fue enviado.")
+                                
+                    input("\nPresiona ENTER para cerrar el navegador y salir...")
                     return
                 elif resp == 'salir':
                     return

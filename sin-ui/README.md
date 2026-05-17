@@ -1,33 +1,31 @@
-# Arquitectura del Bot de WhatsApp
+# Arquitectura del Bot de WhatsApp (Versión Consola / Sin UI)
 
-Este proyecto está diseñado para automatizar interacciones en WhatsApp Web utilizando SeleniumBase. La arquitectura se basa en el principio de separación de responsabilidades (Separation of Concerns), lo que asegura que el código sea mantenible, escalable y fácil de leer.
+Esta es la versión del bot controlada enteramente por consola. Ha sido actualizada para implementar una **lógica multi-perfil sincronizada y asíncrona**, permitiendo ejecutar múltiples perfiles de diferentes navegadores en paralelo, manteniendo sus flujos y posibles errores totalmente independientes.
 
 ## Estructura de Archivos
 
 ```
-/
-├── main.py
-├── bot_sb.py
-├── ui_selectors.py
-├── perfil/
-│   └── profile 1/      (Carpeta autogenerada por Chrome/SeleniumBase con la sesión)
+/sin-ui
+├── main.py              (Punto de entrada, Menú Maestro y orquestador de Hilos)
+├── bot_sb.py            (Lógica de SeleniumBase y manipulación de WhatsApp)
+├── ui_selectors.py      (Centralización de XPaths de la interfaz)
+├── carpeta_gestor.py    (Escaneo y listado automático de perfiles)
+├── perfiles/            (Directorio raíz de perfiles)
+│   ├── chrome/
+│   └── firefox/
+└── arquitectura.md      (Explicación detallada de la lógica de hilos)
 ```
 
-### 1. `main.py`
-Es el punto de entrada principal (Entrypoint). Su única responsabilidad es inicializar la configuración (como definir la ruta del perfil de usuario) y arrancar la clase del bot. Mantener este archivo simple permite que otros desarrolladores entiendan rápidamente dónde y cómo inicia la aplicación.
+### Novedades del Sistema
 
-### 2. `ui_selectors.py`
-Contiene la clase `WhatsappSelectors`. Aquí se centralizan todas las rutas XPath utilizadas para identificar elementos en el DOM (la interfaz de WhatsApp).
-- **Ventaja**: Si WhatsApp actualiza el diseño de su página y los elementos cambian, no necesitas buscar en toda la lógica del bot. Solo debes actualizar el XPath correspondiente en este archivo.
-
-### 3. `bot_sb.py`
-Contiene la clase principal `WhatsappBot` que implementa la lógica orientada a objetos.
-- Controla el navegador utilizando `SeleniumBase`.
-- Ejecuta los pasos lógicos del negocio a través de métodos modulares (`entrar_a_grupos`, `obtener_titulos_grupos`, `entrar_a_chat`, `escribir_y_enviar_mensaje`).
-- Implementa un menú interactivo en consola para permitir pruebas parciales del sistema, sin requerir una recarga del navegador por cada acción, agilizando el flujo de trabajo de desarrollo.
+- **Selección Dinámica:** Al arrancar el script, te mostrará una lista de todos los perfiles detectados en la carpeta `perfiles/` y te dejará elegir cuáles abrir.
+- **Hilos Paralelos:** Los navegadores se abren de forma simultánea (paralela) usando `threading`.
+- **Menú Maestro Centralizado:** Para evitar que la consola colapse con múltiples perfiles pidiendo `input()`, el menú está en `main.py`. Este menú captura tus directrices (ej: qué mensaje enviar) y luego manda la orden a los bots en paralelo.
+- **Aislamiento de Errores:** Si el perfil 1 falla buscando un grupo, el perfil 2 y 3 continuarán sin inmutarse ni retrasarse.
+- **Mensajes Independientes:** El menú maestro te permite asignar un grupo y un mensaje distinto para cada perfil activo, o asignar el mismo para todos.
 
 ## Ejecución
-Para iniciar el proyecto basta con ejecutar:
+Para iniciar el proyecto basta con asegurarte de tener perfiles creados en la carpeta `perfiles` y ejecutar:
 ```bash
 python main.py
 ```

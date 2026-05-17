@@ -125,45 +125,41 @@ graph TD
 
 ## 📁 ESTRUCTURA DE CARPETAS
 
-```
+```text
 proyecto/
 │
 ├── main.py                           # 🚀 Punto de entrada
 │
 ├── perfiles/                         # 📂 Perfiles de navegadores
-│   ├── chrome/
-│   │   ├── Profile 1/               # Chrome Profile 1
-│   │   ├── Profile 2/               # Chrome Profile 2
-│   │   └── ...
-│   └── firefox/
-│       ├── profile_1/               # Firefox Profile 1
-│       ├── profile_2/               # Firefox Profile 2
-│       └── ...
+│
+├── selectores/                       # 🎯 Selectores UI
+│   └── ui_selectors.py               # Centralización de XPaths de WhatsApp
+│
+├── whatsapp/                         # 💬 Automatización de WhatsApp
+│   └── acciones.py                   # Funciones puras (entrar a chat, escribir)
 │
 ├── gestores/                         # ⚙️ Gestión del sistema
-│   ├── __init__.py
-│   ├── carpeta_gestor.py            # 📁 Auto-crear y detectar carpetas
-│   ├── perfiles_manager.py          # 👤 Gestionar perfiles (legacy)
-│   ├── selenium_manager.py          # 🌐 Abrir navegadores SeleniumBase
-│   └── thread_manager.py            # 🧵 Gestionar threads de navegadores
+│   ├── carpeta_gestor.py             # 📁 Auto-crear y detectar carpetas
+│   ├── perfiles_manager.py           # 👤 Gestionar perfiles (legacy)
+│   ├── selenium_manager.py           # 🌐 Abrir navegadores
+│   ├── thread_manager.py             # 🧵 Gestionar threads de navegadores
+│   └── sesiones_manager.py           # 🧠 Registro de sesiones activas
 │
-├── front/                           # 🎨 Interfaz hermosa
-│   ├── __init__.py
-│   ├── ventana.py                   # 🖼️ UI hermosa con PyQt5
-│   └── logica.py                    # 🧠 Lógica asíncrona QThread
+├── front/                            # 🎨 Interfaz hermosa
+│   ├── ventana.py                    # 🖼️ UI hermosa con panel WhatsApp
+│   └── logica.py                     # 🧠 Lógicas asíncronas QThread
 │
-├── opciones/                        # 🔧 Opciones legacy
-│   ├── __init__.py
-│   └── menu.py                      # 📋 UI básica (legacy)
+├── opciones/                         # 🔧 Opciones legacy
+│   └── menu.py                       # 📋 UI básica (legacy)
 │
-├── modelos/                         # 📋 Modelos de datos
-│   ├── __init__.py
-│   └── perfil.py                    # 👤 Modelo Perfil
+├── modelos/                          # 📋 Modelos de datos
+│   └── perfil.py                     # 👤 Modelo Perfil
 │
-├── .gitignore                       # 🚫 Archivos ignorados
-├── guia.md                          # 📖 Esta guía
-├── arquitectura.md                  # 🏗️ Documentación técnica
-└── README.md                        # 📄 Información general
+├── .gitignore                        # 🚫 Archivos ignorados
+├── guia.md                           # 📖 Guía antigua
+├── nueva_guia.md                     # 📖 Nueva guía
+├── arquitectura.md                   # 🏗️ Documentación técnica
+└── README.md                         # 📄 Información general
 ```
 
 ---

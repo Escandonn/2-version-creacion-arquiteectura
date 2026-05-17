@@ -4,7 +4,7 @@ from gestores.selenium_manager import (
     abrir_firefox,
     abrir_edge
 )
-
+from gestores.sesiones_manager import SesionesManager
 
 class NavegadorThread(Thread):
 
@@ -13,26 +13,21 @@ class NavegadorThread(Thread):
         navegador,
         perfil
     ):
-
         super().__init__()
-
         self.navegador = navegador
         self.perfil = perfil
         self.daemon = True
 
-
     def run(self):
-
         try:
-
             if self.navegador == "chrome":
                 abrir_chrome(self.perfil)
-
             elif self.navegador == "firefox":
                 abrir_firefox(self.perfil)
-
             elif self.navegador == "edge":
                 abrir_edge(self.perfil)
-
         except Exception as e:
             print(f"Error al abrir {self.navegador} {self.perfil}: {e}")
+        finally:
+            id_sesion = f"{self.navegador}_{self.perfil}"
+            SesionesManager.eliminar_sesion(id_sesion)

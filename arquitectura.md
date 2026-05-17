@@ -64,12 +64,7 @@ proyecto/
 │
 ├── perfiles/
 │   ├── chrome/
-│   │   ├── Profile 1/
-│   │   ├── Profile 2/
-│   │
 │   ├── firefox/
-│       ├── profile_1/
-│       ├── profile_2/
 │
 ├── gestores/
 │   ├── __init__.py
@@ -77,6 +72,15 @@ proyecto/
 │   ├── perfiles_manager.py
 │   ├── selenium_manager.py
 │   ├── thread_manager.py
+│   └── sesiones_manager.py (NUEVO: Gestiona sesiones vivas)
+│
+├── selectores/
+│   ├── __init__.py
+│   └── ui_selectors.py (NUEVO: Selectores XPath/CSS aislados)
+│
+├── whatsapp/
+│   ├── __init__.py
+│   └── acciones.py (NUEVO: Lógica de interacción con WhatsApp)
 │
 ├── opciones/
 │   ├── __init__.py
@@ -84,8 +88,8 @@ proyecto/
 │
 ├── front/
 │   ├── __init__.py
-│   ├── ventana.py (UI Hermosa)
-│   ├── logica.py (QThread Logic)
+│   ├── ventana.py (UI Hermosa + Panel WhatsApp)
+│   ├── logica.py (QThread Perfiles + QThread Mensajes)
 │
 ├── modelos/
 │   ├── __init__.py

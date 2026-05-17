@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QLabel,
-    QCheckBox, QGroupBox, QScrollArea, QApplication, QLineEdit
+    QCheckBox, QGroupBox, QScrollArea, QApplication, QLineEdit, QTextEdit
 )
 from PyQt5.QtCore import Qt
-from front.logica import LogicaPerfiles
+from front.logica import LogicaPerfiles, LogicaEnvioMensajes
+from gestores.sesiones_manager import SesionesManager
 
 class VentanaHermosa(QWidget):
     def __init__(self, datos):
@@ -16,8 +17,8 @@ class VentanaHermosa(QWidget):
 
     def init_ui(self):
         self.setWindowTitle("Perfiles")
-        self.resize(380, 600)
-        self.setMinimumSize(320, 450)
+        self.resize(400, 750)
+        self.setMinimumSize(350, 600)
         
         # Estilo minimalista tipo Apple (macOS)
         self.setStyleSheet("""
@@ -178,6 +179,40 @@ class VentanaHermosa(QWidget):
         self.open_button.clicked.connect(self.abrir_perfiles)
         main_layout.addWidget(self.open_button)
 
+        # --- SECCIÓN WHATSAPP ---
+        wa_group = QGroupBox("Control de WhatsApp")
+        wa_layout = QVBoxLayout()
+        wa_layout.setContentsMargins(16, 12, 16, 16)
+        wa_layout.setSpacing(10)
+
+        self.btn_actualizar_sesiones = QPushButton("Actualizar Sesiones Activas")
+        self.btn_actualizar_sesiones.setObjectName("secondary")
+        self.btn_actualizar_sesiones.clicked.connect(self.actualizar_lista_sesiones)
+        wa_layout.addWidget(self.btn_actualizar_sesiones)
+
+        self.contenedor_sesiones = QWidget()
+        self.layout_sesiones = QVBoxLayout(self.contenedor_sesiones)
+        self.layout_sesiones.setContentsMargins(0, 0, 0, 0)
+        wa_layout.addWidget(self.contenedor_sesiones)
+        self.checkboxes_sesiones = []
+
+        self.input_grupo = QLineEdit()
+        self.input_grupo.setPlaceholderText("Nombre del Grupo...")
+        wa_layout.addWidget(self.input_grupo)
+
+        self.input_mensaje = QTextEdit()
+        self.input_mensaje.setPlaceholderText("Mensaje a enviar...")
+        self.input_mensaje.setMaximumHeight(60)
+        self.input_mensaje.setStyleSheet("background-color: #ffffff; border: 1px solid #d2d2d7; border-radius: 10px; padding: 5px; color: #1d1d1f;")
+        wa_layout.addWidget(self.input_mensaje)
+
+        self.btn_enviar_wa = QPushButton("Enviar Mensaje a Seleccionados")
+        self.btn_enviar_wa.clicked.connect(self.enviar_mensaje_wa)
+        wa_layout.addWidget(self.btn_enviar_wa)
+
+        wa_group.setLayout(wa_layout)
+        main_layout.addWidget(wa_group)
+
         self.status_label = QLabel("Listo")
         self.status_label.setObjectName("status")
         self.status_label.setAlignment(Qt.AlignCenter)
@@ -231,6 +266,52 @@ class VentanaHermosa(QWidget):
     def terminado(self, mensaje):
         self.status_label.setText("Completado")
         self.open_button.setEnabled(True)
+        self.actualizar_lista_sesiones()
+
+    def actualizar_lista_sesiones(self):
+        for i in reversed(range(self.layout_sesiones.count())): 
+            widget = self.layout_sesiones.itemAt(i).widget()
+            if widget is not None:
+                widget.deleteLater()
+        
+        self.checkboxes_sesiones.clear()
+        
+        ids_activos = SesionesManager.obtener_ids()
+        if not ids_activos:
+            lbl = QLabel("No hay sesiones activas.")
+            self.layout_sesiones.addWidget(lbl)
+            return
+
+        for id_sesion in ids_activos:
+            chk = QCheckBox(id_sesion)
+            chk.setChecked(True)
+            self.layout_sesiones.addWidget(chk)
+            self.checkboxes_sesiones.append((id_sesion, chk))
+
+    def enviar_mensaje_wa(self):
+        ids_seleccionados = [id_s for id_s, chk in self.checkboxes_sesiones if chk.isChecked()]
+        grupo = self.input_grupo.text().strip()
+        mensaje = self.input_mensaje.toPlainText().strip()
+
+        if not ids_seleccionados:
+            self.status_label.setText("Selecciona al menos una sesión para enviar.")
+            return
+        if not grupo:
+            self.status_label.setText("Ingresa el nombre del grupo.")
+            return
+        if not mensaje:
+            self.status_label.setText("Ingresa un mensaje.")
+            return
+
+        self.btn_enviar_wa.setEnabled(False)
+        self.logica_wa = LogicaEnvioMensajes(ids_seleccionados, grupo, mensaje)
+        self.logica_wa.progreso_signal.connect(self.actualizar_progreso)
+        self.logica_wa.terminado_signal.connect(self.terminado_wa)
+        self.logica_wa.start()
+
+    def terminado_wa(self, mensaje):
+        self.status_label.setText(mensaje)
+        self.btn_enviar_wa.setEnabled(True)
 
 def seleccionar_perfiles(datos):
     app = QApplication.instance()

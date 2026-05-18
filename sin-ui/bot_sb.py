@@ -12,6 +12,7 @@ class WhatsappBot:
         self.is_running = True
         self.ready = False
         self.lock = threading.Lock()
+        self.ultimo_grupo_abierto = None
 
     def run(self):
         # Usamos uc=False para garantizar la máxima estabilidad con perfiles Chrome en este sistema
@@ -165,6 +166,7 @@ class WhatsappBot:
                                 
                         if chat_abierto:
                             print(f"[{self.user_data_dir}] Se ha entrado al chat del grupo: {nombre_grupo}")
+                            self.ultimo_grupo_abierto = nombre_grupo
                         else:
                             print(f"[{self.user_data_dir}] Se encontró el grupo pero los clicks parecen no haber abierto el chat.")
                         
@@ -248,16 +250,29 @@ class WhatsappBot:
                     except Exception:
                         pass
                 
+                mensaje_enviado_ok = False
                 if btn_enviar:
                     btn_enviar.click()
                     print(f"[{self.user_data_dir}] ¡Mensaje enviado exitosamente!")
+                    mensaje_enviado_ok = True
                 else:
                     # Alternativa: presionar Enter directamente en el chat box
                     try:
                         from selenium.webdriver.common.keys import Keys
                         chat_box.send_keys(Keys.ENTER)
                         print(f"[{self.user_data_dir}] No se encontró el botón de enviar, se intentó enviar presionado la tecla ENTER.")
+                        mensaje_enviado_ok = True
                     except Exception as ex:
                         print(f"[{self.user_data_dir}] Falló tanto el botón de enviar como el envío por ENTER: {ex}")
+                
+                # Registrar estadísticas de mensajes en base de datos si el envío fue exitoso
+                if mensaje_enviado_ok:
+                    try:
+                        from base_de_datos import db_manager
+                        grupo_destino = getattr(self, "ultimo_grupo_abierto", None) or "Grupo Desconocido"
+                        db_manager.registrar_mensaje_enviado(self.user_data_dir, grupo_destino, texto)
+                        print(f"[{self.user_data_dir}] Estadística de mensaje guardada en base de datos.")
+                    except Exception as db_err:
+                        print(f"[{self.user_data_dir}] Error al guardar estadísticas en base de datos: {db_err}")
             except Exception as e:
                 print(f"[{self.user_data_dir}] Error al escribir/enviar mensaje: {e}")

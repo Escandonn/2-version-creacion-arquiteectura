@@ -14,6 +14,14 @@ class WhatsappBot:
         self.lock = threading.Lock()
         self.ultimo_grupo_abierto = None
 
+    def log(self, msg):
+        print(f"[{self.user_data_dir}] {msg}")
+        if hasattr(self, "log_callback") and self.log_callback:
+            try:
+                self.log_callback(msg)
+            except Exception:
+                pass
+
     def run(self):
         # Usamos uc=False para garantizar la máxima estabilidad con perfiles Chrome en este sistema
         with SB(
@@ -25,10 +33,10 @@ class WhatsappBot:
             self.sb = sb
             self.sb.open("https://web.whatsapp.com/")
 
-            print(f"[{self.user_data_dir}] ESPERANDO WHATSAPP...")
+            self.log("ESPERANDO WHATSAPP...")
             time.sleep(15)
             self.ready = True
-            print(f"[{self.user_data_dir}] LISTO PARA COMANDOS.")
+            self.log("LISTO PARA COMANDOS.")
             
             # Mantener la sesión viva
             while self.is_running:
@@ -253,17 +261,17 @@ class WhatsappBot:
                 mensaje_enviado_ok = False
                 if btn_enviar:
                     btn_enviar.click()
-                    print(f"[{self.user_data_dir}] ¡Mensaje enviado exitosamente!")
+                    self.log("¡Mensaje enviado exitosamente!")
                     mensaje_enviado_ok = True
                 else:
                     # Alternativa: presionar Enter directamente en el chat box
                     try:
                         from selenium.webdriver.common.keys import Keys
                         chat_box.send_keys(Keys.ENTER)
-                        print(f"[{self.user_data_dir}] No se encontró el botón de enviar, se intentó enviar presionado la tecla ENTER.")
+                        self.log("No se encontró el botón de enviar, se intentó enviar presionado la tecla ENTER.")
                         mensaje_enviado_ok = True
                     except Exception as ex:
-                        print(f"[{self.user_data_dir}] Falló tanto el botón de enviar como el envío por ENTER: {ex}")
+                        self.log(f"Falló tanto el botón de enviar como el envío por ENTER: {ex}")
                 
                 # Registrar estadísticas de mensajes en base de datos si el envío fue exitoso
                 if mensaje_enviado_ok:
@@ -271,8 +279,8 @@ class WhatsappBot:
                         from base_de_datos import db_manager
                         grupo_destino = getattr(self, "ultimo_grupo_abierto", None) or "Grupo Desconocido"
                         db_manager.registrar_mensaje_enviado(self.user_data_dir, grupo_destino, texto)
-                        print(f"[{self.user_data_dir}] Estadística de mensaje guardada en base de datos.")
+                        self.log("Estadistica de mensaje guardada en base de datos.")
                     except Exception as db_err:
-                        print(f"[{self.user_data_dir}] Error al guardar estadísticas en base de datos: {db_err}")
+                        self.log(f"Error al guardar estadísticas en base de datos: {db_err}")
             except Exception as e:
                 print(f"[{self.user_data_dir}] Error al escribir/enviar mensaje: {e}")
